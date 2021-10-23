@@ -1,0 +1,30 @@
+package org.hathitrust.htrc.tools.hathifilesauthortitlematch
+
+import java.sql.Timestamp
+
+case class HathiVolume(htid: String,
+                       access: Boolean,
+                       rights: String,
+                       ht_bib_key: String,
+                       description: String,
+                       source: String,
+                       source_bib_num: String,
+                       oclc_num: Set[String],
+                       isbn: Set[String],
+                       issn: Set[String],
+                       lccn: Set[String],
+                       title: String,
+                       imprint: String,
+                       rights_reason_code: String,
+                       rights_timestamp: Timestamp,
+                       us_gov_doc_flag: Integer,
+                       rights_date_used: String,
+                       pub_place: String,
+                       lang: String,
+                       bib_fmt: String,
+                       collection_code: String,
+                       content_provider_code: String,
+                       responsible_entity_code: String,
+                       digitization_agent_code: String,
+                       access_profile_code: String,
+                       author: String)
