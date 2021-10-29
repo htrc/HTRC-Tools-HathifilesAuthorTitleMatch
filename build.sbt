@@ -19,6 +19,7 @@ lazy val commonSettings = Seq(
     Resolver.mavenLocal,
     "HTRC Nexus Repository" at "https://nexus.htrc.illinois.edu/repository/maven-public"
   ),
+  externalResolvers := Resolver.combineDefaultResolvers(resolvers.value.toVector, mavenCentral = false),
   Compile / packageBin / packageOptions += Package.ManifestAttributes(
     ("Git-Sha", git.gitHeadCommit.value.getOrElse("N/A")),
     ("Git-Branch", git.gitCurrentBranch.value),
@@ -26,6 +27,16 @@ lazy val commonSettings = Seq(
     ("Git-Dirty", git.gitUncommittedChanges.value.toString),
     ("Build-Date", new java.util.Date().toString)
   )
+)
+
+lazy val wartRemoverSettings = Seq(
+  Compile / compile / wartremoverWarnings ++= Warts.unsafe.diff(Seq(
+    Wart.DefaultArguments,
+    Wart.NonUnitStatements,
+    Wart.Any,
+    Wart.StringPlusAny,
+    Wart.OptionPartial
+  ))
 )
 
 lazy val ammoniteSettings = Seq(
@@ -49,6 +60,7 @@ lazy val ammoniteSettings = Seq(
 lazy val `hathifiles-authortitle-match` = (project in file("."))
   .enablePlugins(GitVersioning, GitBranchPrompt, JavaAppPackaging)
   .settings(commonSettings)
+  .settings(wartRemoverSettings)
   .settings(ammoniteSettings)
 //  .settings(spark("3.2.0"))
   .settings(spark_dev("3.2.0"))
