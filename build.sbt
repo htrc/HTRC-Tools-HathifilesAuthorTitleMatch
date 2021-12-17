@@ -8,7 +8,7 @@ lazy val commonSettings = Seq(
   organization := "org.hathitrust.htrc",
   organizationName := "HathiTrust Research Center",
   organizationHomepage := Some(url("https://www.hathitrust.org/htrc")),
-  scalaVersion := "2.13.6",
+  scalaVersion := "2.13.7",
   scalacOptions ++= Seq(
     "-feature",
     "-deprecation",
@@ -44,7 +44,7 @@ lazy val ammoniteSettings = Seq(
     {
       val version = scalaBinaryVersion.value match {
         case "2.10" => "1.0.3"
-        case _ ⇒  "2.4.0-23-76673f7f"
+        case _ ⇒  "2.5.0"
       }
       "com.lihaoyi" % "ammonite" % version % Test cross CrossVersion.full
     },
@@ -73,16 +73,13 @@ lazy val `hathifiles-authortitle-match` = (project in file("."))
 //      "me.xdrop"                      %  "fuzzywuzzy"               % "1.3.1",
       "org.hathitrust.htrc"           %% "scala-utils"              % "2.13",
       "org.hathitrust.htrc"           %% "spark-utils"              % "1.4",
-      "org.rogach"                    %% "scallop"                  % "4.0.4",
+      "org.rogach"                    %% "scallop"                  % "4.1.0",
       "com.github.nscala-time"        %% "nscala-time"              % "2.30.0",
-      "ch.qos.logback"                %  "logback-classic"          % "1.2.6",
+      "ch.qos.logback"                %  "logback-classic"          % "1.2.9",
       "org.codehaus.janino"           %  "janino"                   % "3.0.8",  // versions > 3.0.8 are not working
       "org.scalacheck"                %% "scalacheck"               % "1.15.4"  % Test,
       "org.scalatest"                 %% "scalatest"                % "3.2.10"  % Test,
-      "org.scalatestplus"             %% "scalacheck-1-15"          % "3.2.9.0" % Test
-    ),
-    dependencyOverrides ++= Seq(
-      "com.google.guava" % "guava" % "15.0",
+      "org.scalatestplus"             %% "scalacheck-1-15"          % "3.2.10.0" % Test
     ),
     Test / parallelExecution := false,
     Test / fork := true
