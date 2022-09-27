@@ -41,6 +41,7 @@ object Main {
     val sparkConf = new SparkConf()
     sparkConf.setAppName(appName)
     sparkConf.setIfMissing("spark.master", s"local[$numCores]")
+//    sparkConf.set("spark.driver.host","127.0.0.1")
     val sparkMaster = sparkConf.get("spark.master")
 
     val spark = SparkSession.builder()
