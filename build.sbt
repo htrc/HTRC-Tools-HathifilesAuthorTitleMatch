@@ -29,16 +29,6 @@ lazy val commonSettings = Seq(
   )
 )
 
-lazy val wartRemoverSettings = Seq(
-  Compile / compile / wartremoverWarnings ++= Warts.unsafe.diff(Seq(
-    Wart.DefaultArguments,
-    Wart.NonUnitStatements,
-    Wart.Any,
-    Wart.StringPlusAny,
-    Wart.OptionPartial
-  ))
-)
-
 lazy val ammoniteSettings = Seq(
   libraryDependencies +=
     {
@@ -60,9 +50,8 @@ lazy val ammoniteSettings = Seq(
 lazy val `hathifiles-authortitle-match` = (project in file("."))
   .enablePlugins(GitVersioning, GitBranchPrompt, JavaAppPackaging)
   .settings(commonSettings)
-  .settings(wartRemoverSettings)
   .settings(ammoniteSettings)
-//  .settings(spark("3.2.1"))
+//  .settings(spark("3.3.1"))
   .settings(spark_dev("3.3.1"))
   .settings(
     name := "hathifiles-authortitle-match",
@@ -76,7 +65,7 @@ lazy val `hathifiles-authortitle-match` = (project in file("."))
       "org.rogach"                    %% "scallop"                  % "4.1.0",
       "com.github.nscala-time"        %% "nscala-time"              % "2.32.0",
       "ch.qos.logback"                %  "logback-classic"          % "1.4.5",
-      "org.codehaus.janino"           %  "janino"                   % "3.0.8",  // versions > 3.0.8 are not working
+      "org.codehaus.janino"           %  "janino"                   % "3.0.16",  // versions > 3.0.x are not working
       "org.scalacheck"                %% "scalacheck"               % "1.17.0"  % Test,
       "org.scalatest"                 %% "scalatest"                % "3.2.14"  % Test,
       "org.scalatestplus"             %% "scalacheck-1-15"          % "3.2.11.0" % Test
