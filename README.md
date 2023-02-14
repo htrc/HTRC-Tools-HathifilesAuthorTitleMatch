@@ -1,3 +1,7 @@
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/htrc/HTRC-Tools-HathifilesAuthorTitleMatch/ci.yml?branch=develop)](https://github.com/htrc/HTRC-Tools-HathifilesAuthorTitleMatch/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/github/htrc/HTRC-Tools-HathifilesAuthorTitleMatch/branch/develop/graph/badge.svg?token=5K1J2AIATG)](https://codecov.io/github/htrc/HTRC-Tools-HathifilesAuthorTitleMatch)
+[![GitHub release (latest SemVer including pre-releases)](https://img.shields.io/github/v/release/htrc/HTRC-Tools-HathifilesAuthorTitleMatch?include_prereleases&sort=semver)](https://github.com/htrc/HTRC-Tools-HathifilesAuthorTitleMatch/releases/latest)
+
 # HTRC-Tools-HathifilesAuthorTitleMatch
 This tool can be used to find HathiTrust volumes with specific author(s) and title;
 it takes as input a no-header CSV where the first column contains the author information
