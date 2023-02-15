@@ -196,7 +196,7 @@ object Main {
 
       conf.outputPath().mkdirs()
 
-      val joined = inputWithUid.join(matches, usingColumn = "_uuid").drop("_uuid")
+      val joined = inputWithUid.join(matches, usingColumns = List("_uuid"), joinType = "left_outer").drop("_uuid")
       val groupColumns = joined.columns.filterNot(_ == "htid").map(col).toList
 
       joined
