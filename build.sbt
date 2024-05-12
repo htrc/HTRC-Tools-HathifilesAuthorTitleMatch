@@ -65,9 +65,9 @@ lazy val `hathifiles-authortitle-match` = (project in file("."))
     maintainer := "capitanu@illinois.edu",
     libraryDependencies ++= Seq(
 //      "me.xdrop"                      %  "fuzzywuzzy"               % "1.3.1",
-      "org.hathitrust.htrc"           %% "scala-utils"              % "2.14.3",
-      "org.hathitrust.htrc"           %% "spark-utils"              % "1.5.2",
       "org.rogach"                    %% "scallop"                  % "5.1.0",
+      "org.hathitrust.htrc"           %% "scala-utils"              % "2.15.0",
+      "org.hathitrust.htrc"           %% "spark-utils"              % "1.6.0",
       "com.github.nscala-time"        %% "nscala-time"              % "2.32.0",
       "ch.qos.logback"                %  "logback-classic"          % "1.5.6",
       "org.codehaus.janino"           %  "janino"                   % "3.1.12",
