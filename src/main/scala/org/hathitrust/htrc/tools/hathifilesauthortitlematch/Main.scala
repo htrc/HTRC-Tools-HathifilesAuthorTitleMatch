@@ -1,11 +1,13 @@
 package org.hathitrust.htrc.tools.hathifilesauthortitlematch
 
-import java.io.File
 import com.gilt.gfc.time.Timer
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types._
+import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.types.{IntegerType, StringType, StructField, StructType, TimestampType}
-import org.apache.spark.sql.{Dataset, SparkSession}
 import org.hathitrust.htrc.tools.hathifilesauthortitlematch.Helper._
+
+import java.io.File
 
 /**
   * @author Boris Capitanu
@@ -49,7 +51,6 @@ object Main {
       .getOrCreate()
 
     import spark.implicits._
-    import org.apache.spark.sql.functions._
 
     val sc = spark.sparkContext
 
@@ -99,7 +100,7 @@ object Main {
         .as[HathiVolume]
     }
 
-    def readInput(file: File): Array[(String, String)] = {
+    def readInput(file: File): DataFrame = {
       spark
         .read
         .option("header", "true")
@@ -107,8 +108,6 @@ object Main {
         .option("quote", "\"")
         .option("escape", "\"")
         .csv(file.getCanonicalPath)
-        .map(row => (row.getAs[String](1), row.getAs[String](0)))
-        .collect()
     }
 
     try {
@@ -130,12 +129,36 @@ object Main {
 
       val parseHathiAuthor = sanitizeHathiAuthorName _ andThen convertNameFirstLast andThen normalizeAuthor
 
+      val inputDF = readInput(conf.inputPath())
+      val inputSchema = inputDF.schema
+      val inputWithUid =
+        spark.createDataFrame(
+          inputDF.rdd
+            .map { row =>
+              Row.fromSeq(
+                Iterator.range(0, row.length)
+                  .map(i => if (row.isNullAt(i)) null else row.getString(i))
+                  .map(s => if (s != null) s.trim.split("""\s+""").mkString(" ") else null)
+                  .toList
+              )
+            },
+          inputSchema
+        )
+        .dropDuplicates()
+        .withColumn("_uuid", expr("uuid()"))
+
+      inputWithUid.show(10)
+
       val hathiFiles = readHathifiles(conf.hathiFiles())
       val queriesBcast = sc.broadcast {
-        readInput(conf.inputPath())
-          .map { case (t, a) =>
-            (t, cleanTitle(t), a, Option(a).filterNot(_.isEmpty).map(parseInputAuthors).filterNot(_.isEmpty))
+        inputWithUid
+          .map { row =>
+            val uuid = row.getAs[String]("_uuid")
+            val author = row.getAs[String](0)  // assumes first column is author
+            val title = row.getAs[String](1)   // assumes second column is title
+            AuthorsTitleQuery(uuid, cleanTitle(title), Option(author).filterNot(_.isEmpty).map(parseInputAuthors).filterNot(_.isEmpty))
           }
+          .collect()
       }
 
       val matches = hathiFiles.rdd
@@ -146,35 +169,46 @@ object Main {
 
           queries
             .iterator
-            .map { case (title, titleCleanOpt, author, authorCleanOpt) =>
+            .flatMap { case query @ AuthorsTitleQuery(_, title, authors) =>
               val titleMatch = volTitleCleanOpt
-                .zip(titleCleanOpt)
+                .zip(title)
                 .exists { case (vt, t) => isTitleMatch(vt, t, minSimScore = minTitleSim) }
-              val authorMatch = volAuthorCleanOpt.zip(authorCleanOpt) match {
+
+              lazy val authorMatch = volAuthorCleanOpt.zip(authors) match {
                 case Some((a1, a2)) => a2.exists(isAuthorMatch(a1, _, tryFuzzyAuthorMatch, minSimScore = minAuthorSim))
-                case None => (volAuthorCleanOpt.isEmpty && authorCleanOpt.isEmpty) || authorCleanOpt.isEmpty
+                case None => (volAuthorCleanOpt.isEmpty && authors.isEmpty) || authors.isEmpty
               }
 
               // logger.debug(s"\nvolTitle: ${vol.title}  title: $title\nvolAuthor: ${vol.author}  author: $author\nvolAuthorParts: ${volAuthorPartsOpt.map(_.mkString(" | "))}  authorParts: ${authorPartsOpt.map(_.mkString(" | "))}\ntitleMatch: $titleMatch    authorMatch: $authorMatch\n")
 
-              (vol, title, titleMatch, author, authorMatch)
+              if (titleMatch && authorMatch)
+                List(vol -> query)
+              else
+                List.empty
             }
-            .filter(t => t._3 && t._5)  // title and author match
         }
         .collect {
-          case (vol, title, _, author, _) =>
-            logger.info(s"\nvolTitle: ${vol.title}  title: $title\nvolAuthor: ${vol.author}  author: $author\n")
-            (vol, title, author)
+          case (vol, AuthorsTitleQuery(uuid, title, authors)) =>
+            logger.info(s"\nvolTitle: ${vol.title}  title: $title\nvolAuthor: ${vol.author}  author: $authors\n")
+            (vol.title, vol.author, vol.htid, uuid)
         }
+        .toDF("match_title", "match_author", "htid", "_uuid")
 
       conf.outputPath().mkdirs()
 
-      matches
-        .map { case (vol, title, author) => (vol.htid, title, vol.title, author, vol.author) }
-        .toDS()
+      val joined = inputWithUid.join(matches, usingColumns = List("_uuid"), joinType = "left_outer").drop("_uuid")
+      val groupColumns = joined.columns.filterNot(_ == "htid").map(col).toList
+
+      joined
+        .withColumn("htid", concat(lit("\""), $"htid", lit("\"")))
+        .groupBy(groupColumns: _*)
+        .agg(collect_set("htid").as("match_htids"))
+        .withColumn("match_htids", col("match_htids").cast("string"))
+        .coalesce(1)
         .write
-        .option("header", "false")
+        .option("header", "true")
         .option("sep", "\t")
+        .option("escape", "\"")
         .option("encoding", "UTF-8")
         .option("nullValue", null)
         .csv(outputPath + "/matches")
