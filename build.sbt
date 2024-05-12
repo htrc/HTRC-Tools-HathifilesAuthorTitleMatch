@@ -1,4 +1,4 @@
-import Dependencies._
+import Dependencies.*
 
 showCurrentGitBranch
 
@@ -6,7 +6,7 @@ inThisBuild(Seq(
   organization := "org.hathitrust.htrc",
   organizationName := "HathiTrust Research Center",
   organizationHomepage := Some(url("https://www.hathitrust.org/htrc")),
-  scalaVersion := "2.13.10",
+  scalaVersion := "2.13.14",
   scalacOptions ++= Seq(
     "-feature",
     "-deprecation",
@@ -40,7 +40,7 @@ lazy val ammoniteSettings = Seq(
       val version = scalaBinaryVersion.value match {
         case "2.10" => "1.0.3"
         case "2.11" => "1.6.7"
-        case _ ⇒  "2.5.6"
+        case _ ⇒  "3.0.0-M1-24-26133e66"
       }
       "com.lihaoyi" % "ammonite" % version % Test cross CrossVersion.full
     },
@@ -56,8 +56,8 @@ lazy val ammoniteSettings = Seq(
 lazy val `hathifiles-authortitle-match` = (project in file("."))
   .enablePlugins(GitVersioning, GitBranchPrompt, JavaAppPackaging)
   .settings(ammoniteSettings)
-//  .settings(spark("3.3.1"))
-  .settings(spark_dev("3.3.1"))
+//  .settings(spark("3.5.1"))
+  .settings(spark_dev("3.5.1"))
   .settings(
     name := "hathifiles-authortitle-match",
     description := "Searches the HathiFiles for volumes matching specified author/title pairs",
@@ -67,15 +67,21 @@ lazy val `hathifiles-authortitle-match` = (project in file("."))
 //      "me.xdrop"                      %  "fuzzywuzzy"               % "1.3.1",
       "org.hathitrust.htrc"           %% "scala-utils"              % "2.14.3",
       "org.hathitrust.htrc"           %% "spark-utils"              % "1.5.2",
-      "org.rogach"                    %% "scallop"                  % "4.1.0",
+      "org.rogach"                    %% "scallop"                  % "5.1.0",
       "com.github.nscala-time"        %% "nscala-time"              % "2.32.0",
-      "ch.qos.logback"                %  "logback-classic"          % "1.4.5",
-      "org.codehaus.janino"           %  "janino"                   % "3.0.16",  // versions > 3.0.x are not working
-      "org.scalacheck"                %% "scalacheck"               % "1.17.0"  % Test,
-      "org.scalatest"                 %% "scalatest"                % "3.2.15"  % Test,
+      "ch.qos.logback"                %  "logback-classic"          % "1.5.6",
+      "org.codehaus.janino"           %  "janino"                   % "3.1.12",
+      "org.scalacheck"                %% "scalacheck"               % "1.18.0"   % Test,
+      "org.scalatest"                 %% "scalatest"                % "3.2.18"   % Test,
       "org.scalatestplus"             %% "scalacheck-1-15"          % "3.2.11.0" % Test
     ),
-    evictionErrorLevel := Level.Info,
+    Universal / javaOptions ++= Seq(
+      "base/java.lang", "base/java.lang.invoke", "base/java.lang.reflect", "base/java.io", "base/java.net", "base/java.nio",
+      "base/java.util", "base/java.util.concurrent", "base/java.util.concurrent.atomic",
+      "base/sun.nio.ch", "base/sun.nio.cs", "base/sun.security.action",
+      "base/sun.util.calendar", "security.jgss/sun.security.krb5",
+    ).map("-J--add-opens=java." + _ + "=ALL-UNNAMED"),
     Test / parallelExecution := false,
-    Test / fork := true
+    Test / fork := true,
+    evictionErrorLevel := Level.Info
   )
